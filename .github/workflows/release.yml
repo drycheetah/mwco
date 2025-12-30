@@ -1,0 +1,117 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore MWCO.slnx
+
+    - name: Build MWCO.Shared
+      run: dotnet build MWCO.Shared/MWCO.Shared.csproj --configuration Release --no-restore
+
+    - name: Build MWCO.Client
+      run: dotnet build MWCO.Client/MWCO.Client.csproj --configuration Release --no-restore
+      continue-on-error: true
+
+    - name: Build MWCO.Server
+      run: dotnet publish MWCO.Server/MWCO.Server/MWCO.Server.csproj --configuration Release --output ./publish/server --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -r linux-x64
+
+    - name: Build MWCO.Server (Windows)
+      run: dotnet publish MWCO.Server/MWCO.Server/MWCO.Server.csproj --configuration Release --output ./publish/server-win --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -r win-x64
+
+    - name: Build MWCO.Launcher (Linux)
+      run: dotnet publish MWCO.Launcher/MWCO.Launcher.csproj --configuration Release --output ./publish/launcher-linux --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -r linux-x64
+
+    - name: Build MWCO.Launcher (Windows)
+      run: dotnet publish MWCO.Launcher/MWCO.Launcher.csproj --configuration Release --output ./publish/launcher-win --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -r win-x64
+
+    - name: Package Client Mod
+      run: |
+        mkdir -p ./release/MWCO-Client
+        cp MWCO.Client/bin/Release/netstandard2.1/MWCO.Client.dll ./release/MWCO-Client/
+        cp MWCO.Shared/bin/Release/netstandard2.1/MWCO.Shared.dll ./release/MWCO-Client/
+        cd ./release
+        zip -r MWCO-Client.zip MWCO-Client/
+
+    - name: Package Server (Linux)
+      run: |
+        cd ./publish/server
+        zip -r ../../release/MWCO-Server-Linux.zip .
+
+    - name: Package Server (Windows)
+      run: |
+        cd ./publish/server-win
+        zip -r ../../release/MWCO-Server-Windows.zip .
+
+    - name: Package Launcher (Linux)
+      run: |
+        cd ./publish/launcher-linux
+        zip -r ../../release/MWCO-Launcher-Linux.zip .
+
+    - name: Package Launcher (Windows)
+      run: |
+        cd ./publish/launcher-win
+        zip -r ../../release/MWCO-Launcher-Windows.zip .
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/MWCO-Client.zip
+          release/MWCO-Server-Linux.zip
+          release/MWCO-Server-Windows.zip
+          release/MWCO-Launcher-Linux.zip
+          release/MWCO-Launcher-Windows.zip
+        body: |
+          ## MWCO Release ${{ github.ref_name }}
+
+          ### Installation
+
+          **For Players (Client Mod):**
+          1. Download `MWCO-Launcher-*.zip` for your platform
+          2. Extract and run the launcher
+          3. Click "INSTALL MOD" (auto-installs BepInEx)
+          4. Set Steam launch options: `WINEDLLOVERRIDES="winhttp=n,b" %command%`
+          5. Launch game and press F10 to connect
+
+          **For Server Hosts:**
+          1. Download `MWCO-Server-*.zip` for your platform
+          2. Extract and run: `./MWCO.Server <port>` (default: 1999)
+
+          **Manual Client Installation:**
+          1. Install BepInEx 5.4.23.2 to your game folder
+          2. Download `MWCO-Client.zip`
+          3. Extract `MWCO.Client.dll` and `MWCO.Shared.dll` to `BepInEx/plugins/`
+
+          ### Features
+          - Full multiplayer support with client-server architecture
+          - Player synchronization with interpolation
+          - Vehicle physics sync (50Hz tick rate)
+          - Part assembly/damage synchronization via PlayMaker hooks
+          - World object synchronization
+          - In-game connection UI (F10)
+
+          ### System Requirements
+          - My Winter Car (Steam version)
+          - .NET 10 Runtime (for server/launcher)
+          - BepInEx 5.4.23.2 (auto-installed by launcher)
+
+          🤖 Built with Claude Code
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

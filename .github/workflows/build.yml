@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore MWCO.slnx
+
+    - name: Build MWCO.Shared
+      run: dotnet build MWCO.Shared/MWCO.Shared.csproj --configuration Release --no-restore
+
+    - name: Build MWCO.Client
+      run: dotnet build MWCO.Client/MWCO.Client.csproj --configuration Release --no-restore
+      continue-on-error: true
+
+    - name: Build MWCO.Server
+      run: dotnet build MWCO.Server/MWCO.Server/MWCO.Server.csproj --configuration Release --no-restore
+
+    - name: Build MWCO.Launcher
+      run: dotnet build MWCO.Launcher/MWCO.Launcher.csproj --configuration Release --no-restore
+
+    - name: Upload Client Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MWCO-Client
+        path: |
+          MWCO.Client/bin/Release/netstandard2.1/MWCO.Client.dll
+          MWCO.Shared/bin/Release/netstandard2.1/MWCO.Shared.dll
+      continue-on-error: true
+
+    - name: Upload Server Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MWCO-Server
+        path: MWCO.Server/MWCO.Server/bin/Release/net10.0/
+
+    - name: Upload Launcher Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MWCO-Launcher
+        path: MWCO.Launcher/bin/Release/net10.0/
