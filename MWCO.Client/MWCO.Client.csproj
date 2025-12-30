@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MWCO.Shared/MWCO.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Unity Engine DLLs from My Winter Car -->
+    <Reference Include="UnityEngine">
+      <HintPath>/home/dryskidda/.local/share/Steam/steamapps/common/My Winter Car/mywintercar_Data/Managed/UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>/home/dryskidda/.local/share/Steam/steamapps/common/My Winter Car/mywintercar_Data/Managed/Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PlayMaker">
+      <HintPath>/home/dryskidda/.local/share/Steam/steamapps/common/My Winter Car/mywintercar_Data/Managed/PlayMaker.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Harmony for runtime patching -->
+    <PackageReference Include="Lib.Harmony" Version="2.2.2" />
+  </ItemGroup>
+
+</Project>

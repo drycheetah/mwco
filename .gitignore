@@ -1,0 +1,32 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.user
+*.suo
+*.cache
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.log
+*.bak
+
+# Dependencies
+packages/
+node_modules/
+
+# But keep example configs
+!*.example.*
